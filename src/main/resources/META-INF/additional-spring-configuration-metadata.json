@@ -1,0 +1,14 @@
+{
+  "properties": [
+    {
+      "name": "hrworks.public-access-key",
+      "type": "java.lang.String",
+      "description": "public access key of the API credentials of your HRworks organization"
+    },
+    {
+      "name": "hrworks.private-access-key",
+      "type": "java.lang.String",
+      "description": "private access key of the API credentials of your HRworks organization"
+    }
+  ]
+}
