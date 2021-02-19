@@ -14,15 +14,17 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Date;
+import java.time.ZoneOffset;
+import java.util.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.sparqs.hrworks.api.persons.PersonServiceTest.PERSONNEL_NUMBER;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -31,8 +33,8 @@ class AbsenceServiceTest {
     private AbsenceService service;
     private HrWorksClient client;
     public static final GetAbsencesRq PAYLOAD = new GetAbsencesRq(
-            Date.valueOf(LocalDate.parse("2020-01-01", DateTimeFormatter.ISO_DATE)),
-            Date.valueOf(LocalDate.parse("2020-12-31", DateTimeFormatter.ISO_DATE)),
+            Date.from(LocalDate.parse("2020-01-01", DateTimeFormatter.ISO_DATE).atStartOfDay().toInstant(ZoneOffset.UTC)),
+            Date.from(LocalDate.parse("2020-12-31", DateTimeFormatter.ISO_DATE).atStartOfDay().toInstant(ZoneOffset.UTC)),
             Collections.singletonList(PERSONNEL_NUMBER),
             null,
             true
@@ -64,6 +66,22 @@ class AbsenceServiceTest {
         Map<String, List<AbsenceData>> absences = service.getAbsences(PAYLOAD);
         assertEquals(mockedAbsenceData.size(), absences.size());
         assertEquals(mockedAbsenceData.get(PERSONNEL_NUMBER).size(), absences.get(PERSONNEL_NUMBER).size());
+    }
+
+    @Test
+    public void testGetAbsencesInDays() throws IOException {
+        final AbsenceTypeList absenceTypes = loadAbsenceTypeList();
+        final Map<String, List<AbsenceData>> mockedAbsenceData = loadAbsenceData();
+        when(client.getAllAbsenceTypes()).thenReturn(Single.just(absenceTypes));
+        when(client.getAbsences(eq(PAYLOAD))).thenReturn(Single.just(mockedAbsenceData));
+        Map<String, List<AbsenceDay>> absencesInDays = service.getAbsencesInDays(PAYLOAD);
+        assertEquals(30, absencesInDays.get(PERSONNEL_NUMBER).size());
+        assertTrue(absencesInDays.get(PERSONNEL_NUMBER).get(0).getAm());
+        assertTrue(absencesInDays.get(PERSONNEL_NUMBER).get(0).getPm());
+        assertNull(absencesInDays.get(PERSONNEL_NUMBER).get(0).getId());
+        assertNotNull(absencesInDays.get(PERSONNEL_NUMBER).get(0).getName());
+        assertNotNull(absencesInDays.get(PERSONNEL_NUMBER).get(0).getType());
+        assertNotNull(absencesInDays.get(PERSONNEL_NUMBER).get(0).getDate());
     }
 
     public static AbsenceTypeList loadAbsenceTypeList() throws IOException {
