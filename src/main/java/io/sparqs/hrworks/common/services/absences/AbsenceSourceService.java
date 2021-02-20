@@ -1,4 +1,4 @@
-package io.sparqs.hrworks.api.absences;
+package io.sparqs.hrworks.common.services.absences;
 
 import com.aoe.hrworks.*;
 import org.springframework.stereotype.Service;
@@ -11,11 +11,11 @@ import java.util.stream.Collectors;
 import static java.util.stream.Collectors.groupingBy;
 
 @Service
-public class AbsenceService {
+public class AbsenceSourceService {
 
     private final HrWorksClient client;
 
-    AbsenceService(HrWorksClient client) {
+    AbsenceSourceService(HrWorksClient client) {
         this.client = client;
     }
 
@@ -27,28 +27,28 @@ public class AbsenceService {
         return client.getAbsences(payload).blockingGet();
     }
 
-    public Map<String, List<AbsenceDay>> getAbsencesInDays(GetAbsencesRq payload) {
+    public Map<String, List<AbsenceDayEntity>> getAbsencesInDays(GetAbsencesRq payload) {
         return getAbsences(payload).entrySet().stream()
                 .flatMap(e -> e.getValue()
                         .stream().map(AbsenceData::getAbsences)
                         .flatMap(Collection::stream)
                         .map(this::splitIntoAbsenceDays)
                         .flatMap(Collection::stream)
-                        .map(absenceDay -> addPersonnelNumberToAbsenceDay(e.getKey(), absenceDay)))
-                .collect(groupingBy(AbsenceDay::getPersonnelNumber));
+                        .map(absenceDayEntity -> addPersonnelNumberToAbsenceDay(e.getKey(), absenceDayEntity)))
+                .collect(groupingBy(AbsenceDayEntity::getPersonnelNumber));
     }
 
-    private AbsenceDay addPersonnelNumberToAbsenceDay(String personnelNumber, AbsenceDay day) {
+    private AbsenceDayEntity addPersonnelNumberToAbsenceDay(String personnelNumber, AbsenceDayEntity day) {
         return day.toBuilder()
                 .personnelNumber(personnelNumber)
                 .build();
     }
 
-    private List<AbsenceDay> splitIntoAbsenceDays(Absence absencePeriods) {
+    private List<AbsenceDayEntity> splitIntoAbsenceDays(Absence absencePeriods) {
         final LocalDate startDate = convertDate(absencePeriods.getBeginDate());
         final LocalDate endDate = convertDate(absencePeriods.getEndDate());
         return startDate.datesUntil(endDate).parallel()
-                .map(currentDate -> AbsenceDay.builder()
+                .map(currentDate -> AbsenceDayEntity.builder()
                         .name(absencePeriods.getName())
                         .type(findAbsenceTypeKey(absencePeriods.getName()))
                         .date(currentDate)

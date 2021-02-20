@@ -1,4 +1,4 @@
-package io.sparqs.hrworks.security;
+package io.sparqs.hrworks.common.security;
 
 import io.sparqs.hrworks.config.HrWorksConfigurationProperties;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -6,11 +6,11 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 
-class ApiKeyAuthenticationManager implements AuthenticationManager {
+public class ApiKeyAuthenticationManager implements AuthenticationManager {
 
     private final HrWorksConfigurationProperties properties;
 
-    ApiKeyAuthenticationManager(HrWorksConfigurationProperties properties) {
+    public ApiKeyAuthenticationManager(HrWorksConfigurationProperties properties) {
         this.properties = properties;
     }
 

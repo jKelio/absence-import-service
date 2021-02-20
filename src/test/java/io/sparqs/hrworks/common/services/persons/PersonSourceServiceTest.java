@@ -1,4 +1,4 @@
-package io.sparqs.hrworks.api.persons;
+package io.sparqs.hrworks.common.services.persons;
 
 import com.aoe.hrworks.HrWorksClient;
 import com.aoe.hrworks.Person;
@@ -23,17 +23,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class PersonServiceTest {
+public class PersonSourceServiceTest {
 
     public static final String PERSONNEL_NUMBER = "1002";
 
-    private PersonService service;
+    private PersonSourceService service;
     private HrWorksClient client;
 
     @BeforeEach
     void setUp() {
         client = mock(HrWorksClient.class);
-        service = new PersonService(client);
+        service = new PersonSourceService(client);
     }
 
     @AfterEach
@@ -60,8 +60,8 @@ public class PersonServiceTest {
     }
 
     public static Map<String, List<Person>> loadMockedPersons() throws IOException {
-        InputStream is = PersonServiceTest.class.getClassLoader()
-                .getResourceAsStream("mocks/persons.json");
+        InputStream is = PersonSourceServiceTest.class.getClassLoader()
+                .getResourceAsStream("mocks/source/persons.json");
         Map<String, List<TransferPerson>> transferPersons = new ObjectMapper().readValue(is, new TypeReference<>() {});
         Map<String, List<Person>> persons = new LinkedTreeMap<>();
         transferPersons.keySet()
@@ -72,8 +72,8 @@ public class PersonServiceTest {
     }
 
     public static List<Person> loadExpectedPersons() throws IOException {
-        InputStream is = PersonServiceTest.class.getClassLoader()
-                .getResourceAsStream("mocks/expected-persons.json");
+        InputStream is = PersonSourceServiceTest.class.getClassLoader()
+                .getResourceAsStream("mocks/source/expected-persons.json");
         List<TransferPerson> transferPersons = new ObjectMapper().readValue(is, new TypeReference<>() {});
         return transferPersons.stream()
                 .map(TransferPerson::getPerson)

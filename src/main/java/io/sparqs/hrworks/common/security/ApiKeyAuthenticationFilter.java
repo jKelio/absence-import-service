@@ -1,10 +1,10 @@
-package io.sparqs.hrworks.security;
+package io.sparqs.hrworks.common.security;
 
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 
 import javax.servlet.http.HttpServletRequest;
 
-class ApiKeyAuthenticationFilter extends AbstractPreAuthenticatedProcessingFilter {
+public class ApiKeyAuthenticationFilter extends AbstractPreAuthenticatedProcessingFilter {
 
     public static final String AUTHORIZATION = "Authorization";
 

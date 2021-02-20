@@ -1,4 +1,4 @@
-package io.sparqs.hrworks.api.persons;
+package io.sparqs.hrworks.common.services.persons;
 
 import com.aoe.hrworks.HrWorksClient;
 import com.aoe.hrworks.Person;
@@ -10,11 +10,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
-public class PersonService {
+public class PersonSourceService {
 
     private final HrWorksClient client;
 
-    PersonService(HrWorksClient client) {
+    PersonSourceService(HrWorksClient client) {
         this.client = client;
     }
 

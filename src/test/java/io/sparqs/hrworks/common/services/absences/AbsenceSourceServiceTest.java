@@ -1,4 +1,4 @@
-package io.sparqs.hrworks.api.absences;
+package io.sparqs.hrworks.common.services.absences;
 
 import com.aoe.hrworks.*;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -21,16 +21,16 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static io.sparqs.hrworks.api.persons.PersonServiceTest.PERSONNEL_NUMBER;
+import static io.sparqs.hrworks.common.services.persons.PersonSourceServiceTest.PERSONNEL_NUMBER;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class AbsenceServiceTest {
+class AbsenceSourceServiceTest {
 
-    private AbsenceService service;
+    private AbsenceSourceService service;
     private HrWorksClient client;
     public static final GetAbsencesRq PAYLOAD = new GetAbsencesRq(
             Date.from(LocalDate.parse("2020-01-01", DateTimeFormatter.ISO_DATE).atStartOfDay().toInstant(ZoneOffset.UTC)),
@@ -43,7 +43,7 @@ class AbsenceServiceTest {
     @BeforeEach
     void setUp() {
         client = mock(HrWorksClient.class);
-        service = new AbsenceService(client);
+        service = new AbsenceSourceService(client);
     }
 
     @AfterEach
@@ -74,10 +74,10 @@ class AbsenceServiceTest {
         final Map<String, List<AbsenceData>> mockedAbsenceData = loadAbsenceData();
         when(client.getAllAbsenceTypes()).thenReturn(Single.just(absenceTypes));
         when(client.getAbsences(eq(PAYLOAD))).thenReturn(Single.just(mockedAbsenceData));
-        Map<String, List<AbsenceDay>> absencesInDays = service.getAbsencesInDays(PAYLOAD);
+        Map<String, List<AbsenceDayEntity>> absencesInDays = service.getAbsencesInDays(PAYLOAD);
         assertEquals(30, absencesInDays.get(PERSONNEL_NUMBER).size());
-        assertTrue(absencesInDays.get(PERSONNEL_NUMBER).get(0).getAm());
-        assertTrue(absencesInDays.get(PERSONNEL_NUMBER).get(0).getPm());
+        assertTrue(absencesInDays.get(PERSONNEL_NUMBER).get(0).isAm());
+        assertTrue(absencesInDays.get(PERSONNEL_NUMBER).get(0).isPm());
         assertNull(absencesInDays.get(PERSONNEL_NUMBER).get(0).getId());
         assertNotNull(absencesInDays.get(PERSONNEL_NUMBER).get(0).getName());
         assertNotNull(absencesInDays.get(PERSONNEL_NUMBER).get(0).getType());
@@ -85,15 +85,15 @@ class AbsenceServiceTest {
     }
 
     public static AbsenceTypeList loadAbsenceTypeList() throws IOException {
-        InputStream is = AbsenceServiceTest.class.getClassLoader()
-                .getResourceAsStream("mocks/absencetypes.json");
+        InputStream is = AbsenceSourceServiceTest.class.getClassLoader()
+                .getResourceAsStream("mocks/source/absencetypes.json");
         return new ObjectMapper().readValue(is, TransferAbsenceTypeList.class)
                 .getAbsenceTypeList();
     }
 
     public static Map<String, List<AbsenceData>> loadAbsenceData() throws IOException {
-        InputStream is = AbsenceServiceTest.class.getClassLoader()
-                .getResourceAsStream("mocks/absences.json");
+        InputStream is = AbsenceSourceServiceTest.class.getClassLoader()
+                .getResourceAsStream("mocks/source/absences.json");
         Map<String, List<TransferAbsenceData>> transferAbsences = new ObjectMapper()
                 .readValue(is, new TypeReference<>() {});
         Map<String, List<AbsenceData>>  absenceData = new LinkedTreeMap<>();
