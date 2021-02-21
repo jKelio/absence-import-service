@@ -50,13 +50,15 @@ class PersonTargetServiceTest {
         builder = null;
         rest = null;
         properties = null;
+        personService = null;
     }
 
     @Test
     public void testGetPersons() throws IOException {
         ResponseEntity<PersonEntity[]> response = ResponseEntity
                 .ok(loadMockedPersons().toArray(new PersonEntity[0]));
-        doReturn(response).when(rest).getForEntity("/users", PersonEntity[].class);
+        doReturn(response).when(rest)
+                .getForEntity("/users", PersonEntity[].class);
         Collection<PersonEntity> persons = personService.getUsers();
         assertEquals(9, persons.size());
     }

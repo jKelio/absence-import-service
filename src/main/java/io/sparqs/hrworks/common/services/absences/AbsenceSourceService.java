@@ -8,6 +8,7 @@ import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static io.sparqs.hrworks.common.services.absences.AbsenceTypeEnum.SICKNESS;
 import static java.util.stream.Collectors.groupingBy;
 
 @Service
@@ -32,10 +33,20 @@ public class AbsenceSourceService {
                 .flatMap(e -> e.getValue()
                         .stream().map(AbsenceData::getAbsences)
                         .flatMap(Collection::stream)
+                        .filter(this::isConfirmedAbsence)
                         .map(this::splitIntoAbsenceDays)
                         .flatMap(Collection::stream)
                         .map(absenceDayEntity -> addPersonnelNumberToAbsenceDay(e.getKey(), absenceDayEntity)))
                 .collect(groupingBy(AbsenceDayEntity::getPersonnelNumber));
+    }
+
+    private boolean isConfirmedAbsence(Absence a) {
+        try {
+            AbsenceTypeEnum type = AbsenceTypeEnum.fromSource(a.getName());
+            return type.equals(SICKNESS) || type.getStatus().equals(a.getStatus());
+        } catch(Exception exception) {
+            return false;
+        }
     }
 
     private AbsenceDayEntity addPersonnelNumberToAbsenceDay(String personnelNumber, AbsenceDayEntity day) {
@@ -47,9 +58,9 @@ public class AbsenceSourceService {
     private List<AbsenceDayEntity> splitIntoAbsenceDays(Absence absencePeriods) {
         final LocalDate startDate = convertDate(absencePeriods.getBeginDate());
         final LocalDate endDate = convertDate(absencePeriods.getEndDate());
-        return startDate.datesUntil(endDate).parallel()
+        return startDate.datesUntil(endDate.plusDays(1)).parallel()
                 .map(currentDate -> AbsenceDayEntity.builder()
-                        .name(absencePeriods.getName())
+                        .name(AbsenceTypeEnum.fromSource(absencePeriods.getName()))
                         .type(findAbsenceTypeKey(absencePeriods.getName()))
                         .date(currentDate)
                         .am(true)
