@@ -15,6 +15,7 @@ class MigrationServiceTest {
 
     public static final LocalDate BEGIN_DATE = LocalDate.parse("2021-01-01");
     public static final LocalDate END_DATE = LocalDate.parse("2021-12-31");
+
     @Autowired
     MigrationService service;
 

@@ -2,7 +2,10 @@ package io.sparqs.hrworks.common.services.absences;
 
 import io.sparqs.hrworks.config.MocoConfigurationProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -31,6 +34,7 @@ public class AbsenceTargetService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<AbsenceDayEntity> httpEntity = new HttpEntity<>(entity, headers);
+        waitHalfSecond();
         return restTemplate.postForEntity(
                 "/schedules",
                 httpEntity,
@@ -39,6 +43,7 @@ public class AbsenceTargetService {
     }
 
     public Collection<AbsenceDayEntity> readSchedules(LocalDate beginDate, LocalDate endDate, String userId) throws RestClientException {
+        waitHalfSecond();
         ResponseEntity<AbsenceDayEntity[]> response = restTemplate.getForEntity(
                 "/schedules?from={beginDate}&to={endDate}&user_id={userId}",
                 AbsenceDayEntity[].class,
@@ -50,6 +55,7 @@ public class AbsenceTargetService {
     }
 
     public Collection<AbsenceDayEntity> readSchedules(LocalDate beginDate, LocalDate endDate) throws RestClientException {
+        waitHalfSecond();
         ResponseEntity<AbsenceDayEntity[]> response = restTemplate.getForEntity(
                 "/schedules?from={beginDate}&to={endDate}",
                 AbsenceDayEntity[].class,
@@ -60,6 +66,7 @@ public class AbsenceTargetService {
     }
 
     public AbsenceDayEntity readSchedule(Long scheduleId) throws RestClientException {
+        waitHalfSecond();
         ResponseEntity<AbsenceDayEntity> response = restTemplate.getForEntity(
                 "/schedules/{scheduleId}",
                 AbsenceDayEntity.class,
@@ -69,6 +76,17 @@ public class AbsenceTargetService {
     }
 
     public void deleteSchedule(Long scheduleId) throws RestClientException {
+        waitHalfSecond();
         restTemplate.delete("/schedules/{scheduleId}", scheduleId);
+    }
+
+    private void waitHalfSecond() {
+//        synchronized (this) {
+//            try {
+//                wait(500);
+//            } catch (InterruptedException e) {
+//                throw new RestClientException(e.getMessage(), e);
+//            }
+//        }
     }
 }

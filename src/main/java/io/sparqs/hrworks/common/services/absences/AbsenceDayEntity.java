@@ -43,8 +43,13 @@ public class AbsenceDayEntity {
 
     @JsonProperty("assignment")
     private void getAssignment(Map<String, String> map) {
-        name = AbsenceTypeEnum.fromTarget(map.get("name"));
-        type = map.get("type");
+        try {
+            name = AbsenceTypeEnum.fromTarget(map.get("name"));
+            type = map.get("type");
+        } catch (Exception e) {
+            name = null;
+            type = null;
+        }
     }
 
     @JsonProperty("user")
