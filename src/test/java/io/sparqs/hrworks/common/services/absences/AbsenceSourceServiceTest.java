@@ -74,7 +74,7 @@ class AbsenceSourceServiceTest {
         when(client.getAllAbsenceTypes()).thenReturn(Single.just(absenceTypes));
         when(client.getAbsences(eq(PAYLOAD))).thenReturn(Single.just(mockedAbsenceData));
         Map<String, List<AbsenceDayEntity>> absencesInDays = service.getAbsencesInDays(PAYLOAD);
-        assertEquals(30, absencesInDays.get(PERSONNEL_NUMBER).size());
+        assertEquals(39, absencesInDays.get(PERSONNEL_NUMBER).size());
         assertTrue(absencesInDays.get(PERSONNEL_NUMBER).get(0).isAm());
         assertTrue(absencesInDays.get(PERSONNEL_NUMBER).get(0).isPm());
         assertNull(absencesInDays.get(PERSONNEL_NUMBER).get(0).getId());
@@ -169,8 +169,8 @@ class AbsenceSourceServiceTest {
                 @JsonProperty("endDate") Date endDate,
                 @JsonProperty("status") String status,
                 @JsonProperty("workingDays") String workingdays,
-                @JsonProperty("isForenoonHalfDay") Boolean forenoonHalfDay,
-                @JsonProperty("isAfternoonHalfDay") Boolean afternoonHalfDay
+                @JsonProperty(value = "isForenoonHalfDay") boolean forenoonHalfDay,
+                @JsonProperty("isAfternoonHalfDay") boolean afternoonHalfDay
         ) {
             absence = new Absence(
                     name,

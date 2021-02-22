@@ -94,7 +94,7 @@ class AbsenceTargetServiceTest {
         doReturn(response).when(rest).getForEntity(
                 eq("/schedules/{scheduleId}"),
                 eq(AbsenceDayEntity.class),
-                eq("" + scheduleId)
+                eq(scheduleId)
         );
         AbsenceDayEntity absenceDay = service.readSchedule(scheduleId);
         assertEquals(scheduleId, absenceDay.getId());
