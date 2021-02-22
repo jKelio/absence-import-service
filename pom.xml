@@ -65,9 +65,9 @@
         </dependency>
 
         <dependency>
-            <groupId>com.github.AOEpeople</groupId>
+            <groupId>com.github.jKelio</groupId>
             <artifactId>hrworks-api-client</artifactId>
-            <version>1.0.2</version>
+            <version>1.0.4</version>
         </dependency>
         <dependency>
             <groupId>com.squareup.retrofit2</groupId>

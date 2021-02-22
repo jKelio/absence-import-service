@@ -3,6 +3,7 @@ package io.sparqs.hrworks.common.services.absences;
 import com.aoe.hrworks.*;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
@@ -55,16 +56,18 @@ public class AbsenceSourceService {
                 .build();
     }
 
+    // TODO: clarify and adjust for half-day absences in time ranges more than one day.
     private List<AbsenceDayEntity> splitIntoAbsenceDays(Absence absencePeriods) {
         final LocalDate startDate = convertDate(absencePeriods.getBeginDate());
         final LocalDate endDate = convertDate(absencePeriods.getEndDate());
+        final BigDecimal workingDays = new BigDecimal(absencePeriods.getWorkingDays());
         return startDate.datesUntil(endDate.plusDays(1)).parallel()
                 .map(currentDate -> AbsenceDayEntity.builder()
                         .name(AbsenceTypeEnum.fromSource(absencePeriods.getName()))
                         .type(findAbsenceTypeKey(absencePeriods.getName()))
                         .date(currentDate)
-                        .am(true)
-                        .pm(true)
+                        .am(!workingDays.equals(new BigDecimal("0.5")) || !absencePeriods.isForenoonHalfDay())
+                        .pm(!workingDays.equals(new BigDecimal("0.5")) || !absencePeriods.isAfternoonHalfDay())
                         .build())
                 .collect(Collectors.toList());
     }

@@ -25,8 +25,7 @@ import static io.sparqs.hrworks.common.services.persons.PersonSourceServiceTest.
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class AbsenceSourceServiceTest {
 
@@ -169,7 +168,9 @@ class AbsenceSourceServiceTest {
                 @JsonProperty("beginDate") Date beginDate,
                 @JsonProperty("endDate") Date endDate,
                 @JsonProperty("status") String status,
-                @JsonProperty("workingDays") String workingdays
+                @JsonProperty("workingDays") String workingdays,
+                @JsonProperty("isForenoonHalfDay") Boolean forenoonHalfDay,
+                @JsonProperty("isAfternoonHalfDay") Boolean afternoonHalfDay
         ) {
             absence = new Absence(
                     name,
@@ -177,7 +178,9 @@ class AbsenceSourceServiceTest {
                     beginDate,
                     endDate,
                     status,
-                    Objects.isNull(workingdays) ? "0.0" : workingdays
+                    Objects.isNull(workingdays) ? "0.0" : workingdays,
+                    forenoonHalfDay,
+                    afternoonHalfDay
             );
         }
     }
