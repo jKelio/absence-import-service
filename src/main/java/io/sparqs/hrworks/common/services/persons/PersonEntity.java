@@ -20,6 +20,8 @@ public class PersonEntity {
     private boolean active;
     private boolean extern;
 
+    private String email;
+
     @JsonProperty("mobile_phone")
     private String mobilePhone;
 
@@ -30,7 +32,7 @@ public class PersonEntity {
     private String homeAddress;
 
     @JsonProperty("info")
-    private String personnelNumber;
+    private String info;
     private String birthday;
 
     @JsonProperty("avatar_url")

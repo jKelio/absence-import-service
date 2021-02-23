@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 
 import static io.sparqs.hrworks.common.services.absences.AbsenceTypeEnum.SICKNESS;
 import static io.sparqs.hrworks.common.services.absences.AbsenceTypeEnum.VACATION;
+import static java.lang.Integer.parseInt;
 import static java.time.DayOfWeek.SATURDAY;
 import static java.time.DayOfWeek.SUNDAY;
 import static java.util.stream.Collectors.groupingBy;
@@ -52,10 +53,10 @@ public class MigrationService {
      * @param endDate
      */
     private void cleanAbsenceDays(LocalDate beginDate, LocalDate endDate) {
-        Collection<AbsenceDayEntity> absenceDaysToBeCleared = this.absenceTargetService.readSchedules(beginDate, endDate).stream()
+        Collection<AbsenceDayEntity> absenceDaysToBeCleaned = this.absenceTargetService.readSchedules(beginDate, endDate).stream()
                 .filter(a -> a.getName().equals(VACATION) || a.getName().equals(SICKNESS))
                 .collect(Collectors.toList());
-        absenceDaysToBeCleared.stream()
+        absenceDaysToBeCleaned.stream()
                 .map(AbsenceDayEntity::getId)
                 .forEach(absenceTargetService::deleteSchedule);
     }
@@ -67,19 +68,19 @@ public class MigrationService {
      */
     public void importAbsenceDays(LocalDate beginDate, LocalDate endDate) {
         cleanAbsenceDays(beginDate, endDate);
-        List<String> personnelNumbers = personSourceService.getAllActivePersons().stream()
-                .map(Person::getPersonnelNumber)
+        List<String> personIds = personSourceService.getAllActivePersons().stream()
+                .map(Person::getPersonId)
                 .collect(Collectors.toList());
         GetAbsencesRq payload = new GetAbsencesRq(
                 Date.from(beginDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()),
                 Date.from(endDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()),
-                personnelNumbers,
+                personIds,
                 null,
-                true
+                false
         );
         Map<String, List<AbsenceDayEntity>> absenceDaysByPersonnelNumber = absenceSourceService.getAbsencesInDays(payload);
         Map<Integer, List<AbsenceDayEntity>> absenceDaysByUserId = absenceDaysByPersonnelNumber.entrySet()
-                .stream().flatMap(this::buildAbsenceDayByPersonnelNumber)
+                .stream().flatMap(this::buildAbsenceDayByPersonId)
                 .collect(groupingBy(AbsenceDayEntity::getUserId));
         absenceDaysByUserId.values().stream().flatMap(Collection::stream)
                 .filter(this::isWorkingDay)
@@ -88,10 +89,10 @@ public class MigrationService {
                 .forEach(absenceTargetService::createSchedule);
     }
 
-    private Stream<AbsenceDayEntity> buildAbsenceDayByPersonnelNumber(Entry<String, List<AbsenceDayEntity>> entry) {
+    private Stream<AbsenceDayEntity> buildAbsenceDayByPersonId(Entry<String, List<AbsenceDayEntity>> entry) {
         PersonEntity person = findPerson(entry.getKey());
         return entry.getValue().stream()
-                .map(d -> addUserIdToAbsenceDay(Integer.parseInt(person.getId(), 10), d));
+                .map(d -> addUserIdToAbsenceDay(parseInt(person.getId(), 10), d));
     }
 
     private AbsenceDayEntity addUserIdToAbsenceDay(int userId, AbsenceDayEntity day) {
@@ -100,11 +101,11 @@ public class MigrationService {
                 .build();
     }
 
-    private PersonEntity findPerson(String personnelNumber) {
+    private PersonEntity findPerson(String personId) {
         return personTargetService.getUsers().stream()
-                .filter(u -> u.getPersonnelNumber().equals(personnelNumber))
+                .filter(u -> u.getEmail().equals(personId))
                 .findAny()
-                .orElseThrow();
+                .orElseThrow(() -> new NoSuchElementException("could not find person in target by " + personId));
     }
 
     private AbsenceDayEntity buildAbsenceDay(AbsenceDayEntity entity) {

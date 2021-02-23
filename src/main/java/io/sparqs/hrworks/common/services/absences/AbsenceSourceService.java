@@ -50,8 +50,8 @@ public class AbsenceSourceService {
                         .filter(this::isConfirmedAbsence)
                         .map(this::splitIntoAbsenceDays)
                         .flatMap(Collection::stream)
-                        .map(absenceDayEntity -> addPersonnelNumberToAbsenceDay(e.getKey(), absenceDayEntity)))
-                .collect(groupingBy(AbsenceDayEntity::getPersonnelNumber));
+                        .map(absenceDayEntity -> addPersonIdToAbsenceDay(e.getKey(), absenceDayEntity)))
+                .collect(groupingBy(AbsenceDayEntity::getPersonId));
     }
 
     private boolean isConfirmedAbsence(Absence a) {
@@ -63,9 +63,9 @@ public class AbsenceSourceService {
         }
     }
 
-    private AbsenceDayEntity addPersonnelNumberToAbsenceDay(String personnelNumber, AbsenceDayEntity day) {
+    private AbsenceDayEntity addPersonIdToAbsenceDay(String personnelNumber, AbsenceDayEntity day) {
         return day.toBuilder()
-                .personnelNumber(personnelNumber)
+                .personId(personnelNumber)
                 .build();
     }
 

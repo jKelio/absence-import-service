@@ -18,10 +18,11 @@ class PersonEntityTest {
                 "lastname",
                 true,
                 true,
-                "mobilenumber",
-                "workphone",
-                "homeaddress",
-                "personnelnumber",
+                "mail@mail.com",
+                "mobileNumber",
+                "workPhone",
+                "homeAddress",
+                "info",
                 "birthday",
                 "avatar",
                 "unit"
@@ -71,11 +72,6 @@ class PersonEntityTest {
     @Test
     void getHomeAddress() {
         assertNotNull(entity.getHomeAddress());
-    }
-
-    @Test
-    void getPersonnelNumber() {
-        assertNotNull(entity.getPersonnelNumber());
     }
 
     @Test

@@ -33,7 +33,7 @@ public class AbsenceDayEntity {
     private boolean pm;
     private AbsenceTypeEnum name;
     private String type;
-    private String personnelNumber;
+    private String personId;
     private String comment;
 
     @JsonProperty("user_id")
