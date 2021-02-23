@@ -16,7 +16,7 @@ import java.util.Collection;
 
 import static io.sparqs.hrworks.common.services.persons.PersonTargetService.API_KEY_PREFIX;
 import static io.sparqs.hrworks.common.services.persons.PersonTargetService.AUTHORIZATION;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 

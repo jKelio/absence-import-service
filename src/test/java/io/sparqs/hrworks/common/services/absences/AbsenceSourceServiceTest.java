@@ -15,9 +15,8 @@ import org.springframework.lang.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.ZoneOffset;
-import java.util.Date;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -27,7 +26,8 @@ import static java.util.stream.Collectors.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class AbsenceSourceServiceTest {
 

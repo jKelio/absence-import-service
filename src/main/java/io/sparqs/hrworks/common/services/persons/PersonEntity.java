@@ -1,7 +1,9 @@
 package io.sparqs.hrworks.common.services.persons;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.Map;
 
