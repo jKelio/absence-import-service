@@ -5,9 +5,11 @@ import java.util.Arrays;
 import static java.util.Objects.nonNull;
 
 public enum AbsenceTypeEnum {
+    ABSENCE(null, "Abwesenheit", null, 5),
     VACATION("Annual vacation", "Urlaub", "Checked, OK", 4),
     SICKNESS("Sickness with sickness certificate", "Krankheit", "Reported", 3),
-    HOLIDAY(null, "Feiertag", null, 2);
+    HOLIDAY(null, "Feiertag", null, 2),
+    UNPREDICTABLE(null, "Nicht planbar", null, 1);
 
     private final String source;
     private final String target;

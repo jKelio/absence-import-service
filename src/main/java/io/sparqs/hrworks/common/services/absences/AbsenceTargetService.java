@@ -81,12 +81,12 @@ public class AbsenceTargetService {
     }
 
     private void waitHalfSecond() {
-//        synchronized (this) {
-//            try {
-//                wait(500);
-//            } catch (InterruptedException e) {
-//                throw new RestClientException(e.getMessage(), e);
-//            }
-//        }
+        synchronized (this) {
+            try {
+                wait(1000);
+            } catch (InterruptedException e) {
+                throw new RestClientException(e.getMessage(), e);
+            }
+        }
     }
 }

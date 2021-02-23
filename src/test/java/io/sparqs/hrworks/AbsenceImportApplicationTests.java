@@ -6,14 +6,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 @Disabled
 @SpringBootTest
-class HrWorksApplicationTests {
+class AbsenceImportApplicationTests {
 
     @Test
     void contextLoads() { }
 
     @Test
     void testMain() {
-        HrWorksApplication.main(new String[0]);
+        AbsenceImportApplication.main(new String[0]);
     }
 
 }

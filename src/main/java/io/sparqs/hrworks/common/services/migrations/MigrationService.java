@@ -3,6 +3,7 @@ package io.sparqs.hrworks.common.services.migrations;
 import com.aoe.hrworks.GetAbsencesRq;
 import com.aoe.hrworks.Person;
 import io.sparqs.hrworks.common.services.absences.AbsenceDayEntity;
+import io.sparqs.hrworks.common.services.absences.AbsenceDayEntity.AbsenceDayEntityBuilder;
 import io.sparqs.hrworks.common.services.absences.AbsenceSourceService;
 import io.sparqs.hrworks.common.services.absences.AbsenceTargetService;
 import io.sparqs.hrworks.common.services.absences.AbsenceTypeEnum;
@@ -19,8 +20,7 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.sparqs.hrworks.common.services.absences.AbsenceTypeEnum.SICKNESS;
-import static io.sparqs.hrworks.common.services.absences.AbsenceTypeEnum.VACATION;
+import static io.sparqs.hrworks.common.services.absences.AbsenceTypeEnum.*;
 import static java.lang.Integer.parseInt;
 import static java.time.DayOfWeek.SATURDAY;
 import static java.time.DayOfWeek.SUNDAY;
@@ -54,7 +54,7 @@ public class MigrationService {
      */
     private void cleanAbsenceDays(LocalDate beginDate, LocalDate endDate) {
         Collection<AbsenceDayEntity> absenceDaysToBeCleaned = this.absenceTargetService.readSchedules(beginDate, endDate).stream()
-                .filter(a -> a.getName().equals(VACATION) || a.getName().equals(SICKNESS))
+                .filter(a -> a.getName().equals(VACATION) || a.getName().equals(SICKNESS) || a.getName().equals(HOLIDAY))
                 .collect(Collectors.toList());
         absenceDaysToBeCleaned.stream()
                 .map(AbsenceDayEntity::getId)
@@ -71,6 +71,26 @@ public class MigrationService {
         List<String> personIds = personSourceService.getAllActivePersons().stream()
                 .map(Person::getPersonId)
                 .collect(Collectors.toList());
+
+        Collection<AbsenceDayEntity> holidays = absenceSourceService.getHolidays(beginDate.getYear()).stream()
+                .map(h -> AbsenceDayEntity.builder()
+                            .date(h.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate())
+                            .name(HOLIDAY)
+                            .am(!h.isHalfDay())
+                            .pm(true)
+                            .comment(h.getName() + " - automatically imported from HRworks")
+                            .overwrite(true)
+                            .build())
+                .collect(Collectors.toList());
+        personIds.stream()
+                .filter(this::existPerson)
+                .flatMap(id -> holidays.stream()
+                        .map(d -> d.toBuilder()
+                                .userId(parseInt(findPerson(id).getId()))
+                                .build()))
+                .forEach(absenceTargetService::createSchedule);
+
+
         GetAbsencesRq payload = new GetAbsencesRq(
                 Date.from(beginDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()),
                 Date.from(endDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()),
@@ -79,14 +99,19 @@ public class MigrationService {
                 false
         );
         Map<String, List<AbsenceDayEntity>> absenceDaysByPersonnelNumber = absenceSourceService.getAbsencesInDays(payload);
-        Map<Integer, List<AbsenceDayEntity>> absenceDaysByUserId = absenceDaysByPersonnelNumber.entrySet()
-                .stream().flatMap(this::buildAbsenceDayByPersonId)
+        Map<Integer, List<AbsenceDayEntity>> absenceDaysByUserId = absenceDaysByPersonnelNumber.entrySet().stream()
+                .filter(this::existPerson)
+                .flatMap(this::buildAbsenceDayByPersonId)
                 .collect(groupingBy(AbsenceDayEntity::getUserId));
         absenceDaysByUserId.values().stream().flatMap(Collection::stream)
                 .filter(this::isWorkingDay)
                 .filter(d -> !isHoliday(d))
                 .map(this::buildAbsenceDay)
                 .forEach(absenceTargetService::createSchedule);
+    }
+
+    private boolean existPerson(Entry<String, List<AbsenceDayEntity>> entry) {
+        return existPerson(entry.getKey());
     }
 
     private Stream<AbsenceDayEntity> buildAbsenceDayByPersonId(Entry<String, List<AbsenceDayEntity>> entry) {
@@ -99,6 +124,11 @@ public class MigrationService {
         return day.toBuilder()
                 .userId(userId)
                 .build();
+    }
+
+    private boolean existPerson(String personId) {
+        return personTargetService.getUsers().stream()
+                .anyMatch(u -> u.getEmail().equals(personId));
     }
 
     private PersonEntity findPerson(String personId) {

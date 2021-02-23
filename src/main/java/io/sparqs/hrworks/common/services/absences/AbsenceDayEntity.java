@@ -40,6 +40,7 @@ public class AbsenceDayEntity {
     private int userId;
     private String userFirstName;
     private String userLastName;
+    private boolean overwrite;
 
     @JsonProperty("assignment")
     private void getAssignment(Map<String, String> map) {
