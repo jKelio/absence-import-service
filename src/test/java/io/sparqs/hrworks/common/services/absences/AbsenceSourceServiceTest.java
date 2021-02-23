@@ -11,6 +11,7 @@ import lombok.Getter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.lang.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,6 +23,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.sparqs.hrworks.common.services.persons.PersonSourceServiceTest.PERSONNEL_NUMBER;
+import static java.util.stream.Collectors.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -83,6 +85,24 @@ class AbsenceSourceServiceTest {
         assertNotNull(absencesInDays.get(PERSONNEL_NUMBER).get(0).getDate());
     }
 
+    @Test
+    public void testGetHolidays() throws IOException {
+        final Map<String, HolidayData> holidayData = loadHolidayDataMap();
+        when(client.getHolidays(any(GetHolidaysRq.class))).thenReturn(Single.just(holidayData));
+        Collection<Holiday> holidays = service.getHolidays(2021);
+        assertEquals(13, holidays.size());
+    }
+
+    private static Map<String, HolidayData> loadHolidayDataMap() throws IOException {
+        InputStream is = AbsenceSourceServiceTest.class.getClassLoader()
+                .getResourceAsStream("mocks/source/holidays.json");
+        Map<String, TransferHolidayData> map = new ObjectMapper().readValue(is, new TypeReference<>() {});
+        return map.entrySet().stream()
+                .map(e -> new HolidayDataTuple(e.getKey(), e.getValue().getHolidayData()))
+                .collect(toMap(HolidayDataTuple::getKey, HolidayDataTuple::getHolidayData));
+    }
+
+
     public static AbsenceTypeList loadAbsenceTypeList() throws IOException {
         InputStream is = AbsenceSourceServiceTest.class.getClassLoader()
                 .getResourceAsStream("mocks/source/absencetypes.json");
@@ -139,6 +159,67 @@ class AbsenceSourceServiceTest {
                 @JsonProperty("active") boolean isActive,
                 @JsonProperty("reducesHolidayEntitlement") boolean reducesHolidayEntitlement) {
             absenceType = new AbsenceType(name, key, type, isActive, reducesHolidayEntitlement);
+        }
+    }
+
+    @Getter
+    private static class HolidayDataTuple {
+        private final String key;
+        private final HolidayData holidayData;
+
+        HolidayDataTuple(String key, HolidayData holidayData) {
+            this.key = key;
+            this.holidayData = holidayData;
+        }
+    }
+
+    @Getter
+    private static class TransferHolidayData {
+        private final HolidayData holidayData;
+
+        @JsonCreator
+        TransferHolidayData(
+                @JsonProperty("permamentEstablishmentHolidays") Map<String, List<TransferHoliday>> permanentEstablishmentHolidays,
+                @JsonProperty("stateHolidays") Map<String, List<TransferHoliday>> stateHolidays,
+                @JsonProperty("generalHolidays") List<TransferHoliday> generalHolidays
+        ) {
+            holidayData = new HolidayData(
+                    map(permanentEstablishmentHolidays),
+                    map(stateHolidays),
+                    generalHolidays.stream().map(TransferHolidayData::map).collect(Collectors.toList())
+            );
+        }
+
+        private static Map<String, List<Holiday>> map(Map<String, List<TransferHoliday>> groupedHolidays) {
+            return groupedHolidays.entrySet().stream()
+                    .flatMap(e -> e.getValue().stream().map(t -> new TransferHoliday(e.getKey(), t.getHoliday())))
+                    .collect(groupingBy(TransferHoliday::getKey, mapping(TransferHoliday::getHoliday, toList())));
+        }
+
+        private static Holiday map(TransferHoliday holiday) {
+            return holiday.getHoliday();
+        }
+    }
+
+    @Getter
+    private static class TransferHoliday{
+        private final Holiday holiday;
+
+        @Nullable
+        private String key;
+
+        @JsonCreator
+        TransferHoliday(
+                @JsonProperty("date") Date date,
+                @JsonProperty("halfDay") boolean halfday,
+                @JsonProperty("name") String name
+        ) {
+            holiday = new Holiday(date, halfday, name);
+        }
+
+        TransferHoliday(String key, Holiday holiday) {
+            this.key = key;
+            this.holiday = holiday;
         }
     }
 

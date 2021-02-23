@@ -15,6 +15,8 @@ import static java.util.stream.Collectors.groupingBy;
 @Service
 public class AbsenceSourceService {
 
+    public static final String COUNTRY_CODE = "DEU";
+    public static final String STATE_NAME = "North Rhine-Westfalia";
     private final HrWorksClient client;
 
     AbsenceSourceService(HrWorksClient client) {
@@ -23,6 +25,17 @@ public class AbsenceSourceService {
 
     public AbsenceTypeList getAllAbsenceTypes() {
         return client.getAllAbsenceTypes().blockingGet();
+    }
+
+    public Collection<Holiday> getHolidays(int year) {
+        Map<String, HolidayData> holidayDataMap = client
+                .getHolidays(new GetHolidaysRq(year, null, null)).blockingGet();
+        HolidayData countryHolidayData = holidayDataMap.get(COUNTRY_CODE);
+        Collection<Holiday> holidays = countryHolidayData.getGeneralHolidays();
+        holidays.addAll(countryHolidayData.getStateHolidays().get(STATE_NAME));
+        holidays.addAll(countryHolidayData.getPermamentEstablishmentHolidays().values().stream()
+                .flatMap(Collection::stream).collect(Collectors.toList()));
+        return holidays;
     }
 
     public Map<String, List<AbsenceData>> getAbsences(GetAbsencesRq payload) {
