@@ -13,28 +13,19 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
 @Validated
-@Configuration
 @ConfigurationProperties(prefix = "hrworks")
-@Getter
-@Setter
 public class HrWorksConfigurationProperties {
 
+    @Getter
+    @Setter
     @NotNull(message = "public access key shouldn't be null")
     @NotEmpty(message = "public access key shouldn't be empty")
     private String publicAccessKey;
 
+    @Getter
+    @Setter
     @NotNull(message = "private access key shouldn't be null")
     @NotEmpty(message = "private access key shouldn't be empty")
     private String privateAccessKey;
-
-    @Bean
-    public HrWorksClientBuilder clientBuilder() {
-        return HrWorksClientBuilder.INSTANCE;
-    }
-
-    @Bean
-    public HrWorksClient client(HrWorksConfigurationProperties properties, HrWorksClientBuilder clientBuilder) {
-        return clientBuilder.buildClient(properties.getPublicAccessKey(), properties.getPrivateAccessKey());
-    }
 
 }

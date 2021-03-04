@@ -27,20 +27,20 @@ public class PersonTargetService {
 
 
     public Collection<PersonEntity> getUsers() {
-        waitHalfSecond();
+        waitSecond();
         return Arrays.asList(Objects.requireNonNull(restTemplate
                 .getForEntity("/users", PersonEntity[].class).getBody()));
     }
 
     public PersonEntity getUser(String id) {
-        waitHalfSecond();
+        waitSecond();
         return restTemplate.getForEntity("/users/{id}", PersonEntity.class, id).getBody();
     }
 
-    private void waitHalfSecond() {
+    private void waitSecond() {
         synchronized (this) {
             try {
-                wait(1000);
+                wait(1000); // TODO: make configurable, bitch!
             } catch (InterruptedException e) {
                 throw new RestClientException(e.getMessage(), e);
             }

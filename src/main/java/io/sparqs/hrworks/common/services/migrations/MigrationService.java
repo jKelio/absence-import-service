@@ -10,11 +10,14 @@ import io.sparqs.hrworks.common.services.absences.AbsenceTypeEnum;
 import io.sparqs.hrworks.common.services.persons.PersonEntity;
 import io.sparqs.hrworks.common.services.persons.PersonSourceService;
 import io.sparqs.hrworks.common.services.persons.PersonTargetService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -24,11 +27,13 @@ import static io.sparqs.hrworks.common.services.absences.AbsenceTypeEnum.*;
 import static java.lang.Integer.parseInt;
 import static java.time.DayOfWeek.SATURDAY;
 import static java.time.DayOfWeek.SUNDAY;
+import static java.time.format.DateTimeFormatter.ISO_DATE;
 import static java.util.stream.Collectors.groupingBy;
 
 @Service
 public class MigrationService {
 
+    private final Logger logger = LoggerFactory.getLogger(MigrationService.class);
     private final PersonSourceService personSourceService;
     private final PersonTargetService personTargetService;
     private final AbsenceSourceService absenceSourceService;
@@ -53,12 +58,17 @@ public class MigrationService {
      * @param endDate
      */
     private void cleanAbsenceDays(LocalDate beginDate, LocalDate endDate) {
+        logger.info("cleaning all existing absence days from {} to {} at target started",
+                beginDate.format(ISO_DATE), endDate.format(ISO_DATE));
         Collection<AbsenceDayEntity> absenceDaysToBeCleaned = this.absenceTargetService.readSchedules(beginDate, endDate).stream()
                 .filter(a -> a.getName().equals(VACATION) || a.getName().equals(SICKNESS) || a.getName().equals(HOLIDAY))
                 .collect(Collectors.toList());
+        logger.info("{} absence days to be cleaned at target", absenceDaysToBeCleaned.size());
         absenceDaysToBeCleaned.stream()
                 .map(AbsenceDayEntity::getId)
                 .forEach(absenceTargetService::deleteSchedule);
+        logger.info("cleaning all existing absence days from {} to {} at target ended",
+                beginDate.format(ISO_DATE), endDate.format(ISO_DATE));
     }
 
     /**
@@ -68,10 +78,12 @@ public class MigrationService {
      */
     public void importAbsenceDays(LocalDate beginDate, LocalDate endDate) {
         cleanAbsenceDays(beginDate, endDate);
+        logger.info("importing all absence days from {} to {} into target started", beginDate.format(ISO_DATE), endDate.format(ISO_DATE));
         List<String> personIds = personSourceService.getAllActivePersons().stream()
                 .map(Person::getPersonId)
                 .collect(Collectors.toList());
 
+        logger.info("importing all holidays from {} to {} into target started", beginDate.format(ISO_DATE), endDate.format(ISO_DATE));
         Collection<AbsenceDayEntity> holidays = absenceSourceService.getHolidays(beginDate.getYear()).stream()
                 .map(h -> AbsenceDayEntity.builder()
                             .date(h.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate())
@@ -89,7 +101,7 @@ public class MigrationService {
                                 .userId(parseInt(findPerson(id).getId()))
                                 .build()))
                 .forEach(absenceTargetService::createSchedule);
-
+        logger.info("importing all holidays from {} to {} into target ended", beginDate.format(ISO_DATE), endDate.format(ISO_DATE));
 
         GetAbsencesRq payload = new GetAbsencesRq(
                 Date.from(beginDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()),
@@ -108,6 +120,7 @@ public class MigrationService {
                 .filter(d -> !isHoliday(d))
                 .map(this::buildAbsenceDay)
                 .forEach(absenceTargetService::createSchedule);
+        logger.info("importing all absence days from {} to {} into target ended", beginDate.format(ISO_DATE), endDate.format(ISO_DATE));
     }
 
     private boolean existPerson(Entry<String, List<AbsenceDayEntity>> entry) {

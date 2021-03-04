@@ -34,7 +34,7 @@ public class AbsenceTargetService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<AbsenceDayEntity> httpEntity = new HttpEntity<>(entity, headers);
-        waitHalfSecond();
+        waitSecond();
         return restTemplate.postForEntity(
                 "/schedules",
                 httpEntity,
@@ -43,7 +43,7 @@ public class AbsenceTargetService {
     }
 
     public Collection<AbsenceDayEntity> readSchedules(LocalDate beginDate, LocalDate endDate, String userId) throws RestClientException {
-        waitHalfSecond();
+        waitSecond();
         ResponseEntity<AbsenceDayEntity[]> response = restTemplate.getForEntity(
                 "/schedules?from={beginDate}&to={endDate}&user_id={userId}",
                 AbsenceDayEntity[].class,
@@ -55,7 +55,7 @@ public class AbsenceTargetService {
     }
 
     public Collection<AbsenceDayEntity> readSchedules(LocalDate beginDate, LocalDate endDate) throws RestClientException {
-        waitHalfSecond();
+        waitSecond();
         ResponseEntity<AbsenceDayEntity[]> response = restTemplate.getForEntity(
                 "/schedules?from={beginDate}&to={endDate}",
                 AbsenceDayEntity[].class,
@@ -66,7 +66,7 @@ public class AbsenceTargetService {
     }
 
     public AbsenceDayEntity readSchedule(Long scheduleId) throws RestClientException {
-        waitHalfSecond();
+        waitSecond();
         ResponseEntity<AbsenceDayEntity> response = restTemplate.getForEntity(
                 "/schedules/{scheduleId}",
                 AbsenceDayEntity.class,
@@ -76,14 +76,14 @@ public class AbsenceTargetService {
     }
 
     public void deleteSchedule(Long scheduleId) throws RestClientException {
-        waitHalfSecond();
+        waitSecond();
         restTemplate.delete("/schedules/{scheduleId}", scheduleId);
     }
 
-    private void waitHalfSecond() {
+    private void waitSecond() {
         synchronized (this) {
             try {
-                wait(1000);
+                wait(1000); // TODO: make configurable, bitch!
             } catch (InterruptedException e) {
                 throw new RestClientException(e.getMessage(), e);
             }
