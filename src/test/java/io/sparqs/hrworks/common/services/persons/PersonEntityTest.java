@@ -89,4 +89,14 @@ class PersonEntityTest {
     void getUnitName() {
         assertNotNull(entity.getUnitName());
     }
+
+    @Test
+    void getInfo() {
+        assertNotNull(entity.getInfo());
+    }
+
+    @Test
+    void getEmail() {
+        assertNotNull(entity.getEmail());
+    }
 }
