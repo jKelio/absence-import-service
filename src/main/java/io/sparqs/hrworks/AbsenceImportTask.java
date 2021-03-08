@@ -15,7 +15,7 @@ import java.util.concurrent.CompletableFuture;
 public class AbsenceImportTask {
 
     private final Logger logger = LoggerFactory.getLogger(AbsenceImportTask.class);
-    private final ScheduledTaskHolder holder;
+    private final ScheduledTaskHolder holder; // TODO: analysis and research how to interrupt already running and executed tasks with spring
     private final MigrationService service;
     private CompletableFuture<Void>future;
 
@@ -24,13 +24,15 @@ public class AbsenceImportTask {
         this.service = service;
     }
 
-    @Scheduled(initialDelay = 0, cron = "0 8 * * *")
-    public void importAbsences() {
+    @Scheduled(cron = "0 8 * * * *")
+    @Scheduled(cron = "0 16 * * * *")
+    public void cleanAndImportAbsences() {
         join();
         future = CompletableFuture.runAsync(() -> {
-            int currentYear = LocalDate.now().getYear();
-            LocalDate beginDate = LocalDate.parse(String.format("%s-%s-%s", currentYear, "01", "01"));
-            LocalDate endDate = LocalDate.parse(String.format("%s-%s-%s", currentYear, "12", "31"));
+            final int currentYear = LocalDate.now().getYear();
+            final LocalDate beginDate = LocalDate.parse(String.format("%s-%s-%s", currentYear, "01", "01"));
+            final LocalDate endDate = LocalDate.parse(String.format("%s-%s-%s", currentYear, "12", "31"));
+            service.cleanAbsenceDays(beginDate, endDate);
             service.importAbsenceDays(beginDate, endDate);
         });
     }
@@ -39,6 +41,14 @@ public class AbsenceImportTask {
         logger.info("interrupt running absence import task manually");
         join();
         future = new CompletableFuture<>();
+    }
+
+    public void complete() {
+        future.complete(null);
+    }
+
+    public void completeExceptionally(Throwable throwable) {
+        future.completeExceptionally(throwable);
     }
 
     public void cancel() {

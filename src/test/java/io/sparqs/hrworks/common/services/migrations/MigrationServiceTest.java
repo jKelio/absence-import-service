@@ -37,6 +37,7 @@ class MigrationServiceTest {
     void testImportAbsenceDays() {
         try {
             task.interrupt();
+            service.cleanAbsenceDays(BEGIN_DATE, END_DATE);
             service.importAbsenceDays(BEGIN_DATE, END_DATE);
         } catch(Exception e) {
             fail(e.getMessage(), e);
