@@ -83,7 +83,7 @@ public class AbsenceTargetService {
     private void waitSecond() {
         synchronized (this) {
             try {
-                wait(1000); // TODO: make configurable, bitch!
+                wait(500); // TODO: make configurable, bitch!
             } catch (InterruptedException e) {
                 throw new RestClientException(e.getMessage(), e);
             }

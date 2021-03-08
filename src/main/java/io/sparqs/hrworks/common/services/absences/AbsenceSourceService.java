@@ -88,13 +88,8 @@ public class AbsenceSourceService {
                 .type(findAbsenceTypeKey(absencePeriods.getName()))
                 .date(currentDate);
 
-        if (absencePeriods.isForenoonHalfDay() || absencePeriods.isAfternoonHalfDay()) {
-            builder.am(!(absencePeriods.isForenoonHalfDay() && (currentDate.isEqual(startDate) || currentDate.isEqual(endDate))));
-            builder.pm(!(absencePeriods.isAfternoonHalfDay() && (currentDate.isEqual(startDate) || currentDate.isEqual(endDate))));
-        } else {
-            builder.am(true);
-            builder.pm(true);
-        }
+        builder.am(!(absencePeriods.isForenoonHalfDay() && currentDate.isEqual(startDate)));
+        builder.pm(!(absencePeriods.isAfternoonHalfDay() && currentDate.isEqual(endDate)));
 
         return builder.build();
     }

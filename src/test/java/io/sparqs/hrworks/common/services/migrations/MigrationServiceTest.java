@@ -1,5 +1,6 @@
 package io.sparqs.hrworks.common.services.migrations;
 
+import io.sparqs.hrworks.AbsenceImportTask;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -21,6 +22,9 @@ class MigrationServiceTest {
     @Autowired
     MigrationService service;
 
+    @Autowired
+    AbsenceImportTask task;
+
     @BeforeEach
     void setUp() {
     }
@@ -32,6 +36,7 @@ class MigrationServiceTest {
     @Test
     void testImportAbsenceDays() {
         try {
+            task.idle();
             service.importAbsenceDays(BEGIN_DATE, END_DATE);
         } catch(Exception e) {
             fail(e.getMessage(), e);

@@ -1,9 +1,9 @@
 package io.sparqs.hrworks.common.services.migrations;
 
 import com.aoe.hrworks.GetAbsencesRq;
+import com.aoe.hrworks.Holiday;
 import com.aoe.hrworks.Person;
 import io.sparqs.hrworks.common.services.absences.AbsenceDayEntity;
-import io.sparqs.hrworks.common.services.absences.AbsenceDayEntity.AbsenceDayEntityBuilder;
 import io.sparqs.hrworks.common.services.absences.AbsenceSourceService;
 import io.sparqs.hrworks.common.services.absences.AbsenceTargetService;
 import io.sparqs.hrworks.common.services.absences.AbsenceTypeEnum;
@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -77,7 +76,7 @@ public class MigrationService {
      * @param endDate
      */
     public void importAbsenceDays(LocalDate beginDate, LocalDate endDate) {
-        cleanAbsenceDays(beginDate, endDate);
+        //cleanAbsenceDays(beginDate, endDate);
         logger.info("importing all absence days from {} to {} into target started", beginDate.format(ISO_DATE), endDate.format(ISO_DATE));
         List<String> personIds = personSourceService.getAllActivePersons().stream()
                 .map(Person::getPersonId)
@@ -85,15 +84,9 @@ public class MigrationService {
 
         logger.info("importing all holidays from {} to {} into target started", beginDate.format(ISO_DATE), endDate.format(ISO_DATE));
         Collection<AbsenceDayEntity> holidays = absenceSourceService.getHolidays(beginDate.getYear()).stream()
-                .map(h -> AbsenceDayEntity.builder()
-                            .date(h.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate())
-                            .name(HOLIDAY)
-                            .am(!h.isHalfDay())
-                            .pm(true)
-                            .comment(h.getName() + " - automatically imported from HRworks")
-                            .overwrite(true)
-                            .build())
+                .map(this::createAbsenceHoliday)
                 .collect(Collectors.toList());
+
         personIds.stream()
                 .filter(this::existPerson)
                 .flatMap(id -> holidays.stream()
@@ -115,12 +108,24 @@ public class MigrationService {
                 .filter(this::existPerson)
                 .flatMap(this::buildAbsenceDayByPersonId)
                 .collect(groupingBy(AbsenceDayEntity::getUserId));
+
         absenceDaysByUserId.values().stream().flatMap(Collection::stream)
                 .filter(this::isWorkingDay)
-                .filter(d -> !isHoliday(d))
+                .filter(this::isSparta) // is not holiday
                 .map(this::buildAbsenceDay)
                 .forEach(absenceTargetService::createSchedule);
         logger.info("importing all absence days from {} to {} into target ended", beginDate.format(ISO_DATE), endDate.format(ISO_DATE));
+    }
+
+    private AbsenceDayEntity createAbsenceHoliday(Holiday h) {
+        return AbsenceDayEntity.builder()
+                .date(h.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate())
+                .name(HOLIDAY)
+                .am(!h.isHalfDay())
+                .pm(true)
+                .comment(h.getName() + " - automatically imported from HRworks")
+                .overwrite(true)
+                .build();
     }
 
     private boolean existPerson(Entry<String, List<AbsenceDayEntity>> entry) {
@@ -156,6 +161,7 @@ public class MigrationService {
                 .comment("automatically imported from HRworks")
                 .am(isHalfHoliday(entity) != entity.isAm())
                 .pm(isHalfHoliday(entity) != entity.isPm())
+                .overwrite(true)
                 .build();
     }
 
@@ -169,6 +175,10 @@ public class MigrationService {
                 .readSchedules(entity.getDate(), entity.getDate(), ""+entity.getUserId());
         AbsenceDayEntity day = days.stream().findAny().orElse(null);
         return Objects.nonNull(day) && day.getName().equals(AbsenceTypeEnum.HOLIDAY) && !isHalfHoliday(day);
+    }
+
+    private boolean isSparta(AbsenceDayEntity entity) {
+        return !isHoliday(entity);
     }
 
     private boolean isHalfHoliday(AbsenceDayEntity entity) {
