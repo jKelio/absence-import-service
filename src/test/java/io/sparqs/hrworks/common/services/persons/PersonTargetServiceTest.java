@@ -2,6 +2,7 @@ package io.sparqs.hrworks.common.services.persons;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.sparqs.hrworks.common.services.waiting.WaitingService;
 import io.sparqs.hrworks.config.MocoConfigurationProperties;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +30,7 @@ class PersonTargetServiceTest {
     private RestTemplateBuilder builder;
     private RestTemplate rest;
     private MocoConfigurationProperties properties;
+    private WaitingService waitingService;
 
     @BeforeEach
     void setUp() {
@@ -37,12 +39,14 @@ class PersonTargetServiceTest {
         properties = new MocoConfigurationProperties();
         properties.setApiKey("some-mocked-api-key");
         properties.setBaseUrl("https://mocoapp.com/api/v1");
+        waitingService = mock(WaitingService.class);
         when(builder.defaultHeader(eq(AUTHORIZATION), eq(API_KEY_PREFIX + properties.getApiKey())))
                 .thenReturn(builder);
         when(builder.rootUri(eq(properties.getBaseUrl())))
                 .thenReturn(builder);
         when(builder.build()).thenReturn(rest);
-        personService = new PersonTargetService(properties, builder);
+        doNothing().when(waitingService).waitSecond();
+        personService = new PersonTargetService(properties, builder, waitingService);
     }
 
     @AfterEach
@@ -51,6 +55,7 @@ class PersonTargetServiceTest {
         rest = null;
         properties = null;
         personService = null;
+        waitingService= null;
     }
 
     @Test

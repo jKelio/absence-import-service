@@ -2,6 +2,7 @@ package io.sparqs.hrworks.common.services.absences;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.sparqs.hrworks.common.services.waiting.WaitingService;
 import io.sparqs.hrworks.config.MocoConfigurationProperties;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,13 +26,15 @@ import static org.mockito.Mockito.*;
 class AbsenceTargetServiceTest {
 
     public static final String MOCKS_TARGET = "mocks/target/";
+    public static final LocalDate BEGIN_DATE = LocalDate.parse("2021-01-01");
+    public static final LocalDate END_DATE = LocalDate.parse("2021-12-31");
+    public static final String USER_ID = "933611238";
+
     private AbsenceTargetService service;
     private RestTemplateBuilder builder;
     private RestTemplate rest;
     private MocoConfigurationProperties properties;
-    public static final LocalDate BEGIN_DATE = LocalDate.parse("2021-01-01");
-    public static final LocalDate END_DATE = LocalDate.parse("2021-12-31");
-    public static final String USER_ID = "933611238";
+    private WaitingService waitingService;
 
     @BeforeEach
     void setUp() {
@@ -40,12 +43,14 @@ class AbsenceTargetServiceTest {
         properties = new MocoConfigurationProperties();
         properties.setApiKey("some-mocked-api-key");
         properties.setBaseUrl("https://mocoapp.com/api/v1");
+        waitingService = mock(WaitingService.class);
         when(builder.defaultHeader(eq(AUTHORIZATION), eq(API_KEY_PREFIX + properties.getApiKey())))
                 .thenReturn(builder);
         when(builder.rootUri(eq(properties.getBaseUrl())))
                 .thenReturn(builder);
         when(builder.build()).thenReturn(rest);
-        service = new AbsenceTargetService(properties, builder);
+        doNothing().when(waitingService).waitSecond();
+        service = new AbsenceTargetService(properties, builder, waitingService);
     }
 
     @AfterEach
