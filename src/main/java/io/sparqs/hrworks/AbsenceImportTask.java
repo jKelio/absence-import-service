@@ -17,7 +17,7 @@ public class AbsenceImportTask {
     private final Logger logger = LoggerFactory.getLogger(AbsenceImportTask.class);
     private final ScheduledTaskHolder holder; // TODO: analysis and research how to interrupt already running and executed tasks with spring
     private final MigrationService service;
-    private CompletableFuture<Void>future;
+    private CompletableFuture<Void> future;
 
     AbsenceImportTask(ScheduledTaskHolder holder, MigrationService service) {
         this.holder = holder;
@@ -28,13 +28,8 @@ public class AbsenceImportTask {
     @Scheduled(cron = "0 16 * * * *")
     public void cleanAndImportAbsences() {
         join();
-        future = CompletableFuture.runAsync(() -> {
-            final int currentYear = LocalDate.now().getYear();
-            final LocalDate beginDate = LocalDate.parse(String.format("%s-%s-%s", currentYear, "01", "01"));
-            final LocalDate endDate = LocalDate.parse(String.format("%s-%s-%s", currentYear, "12", "31"));
-            service.cleanAbsenceDays(beginDate, endDate);
-            service.importAbsenceDays(beginDate, endDate);
-        });
+        future = CompletableFuture
+                .runAsync(this::cleanAndImportAbsenceDaysInternal);
     }
 
     public void interrupt() {
@@ -64,6 +59,14 @@ public class AbsenceImportTask {
             logger.info("wait until previously started import is completed");
             future.join();
         }
+    }
+
+    private void cleanAndImportAbsenceDaysInternal() {
+        final int currentYear = LocalDate.now().getYear();
+        final LocalDate beginDate = LocalDate.parse(String.format("%s-%s-%s", currentYear, "01", "01"));
+        final LocalDate endDate = LocalDate.parse(String.format("%s-%s-%s", currentYear, "12", "31"));
+        service.cleanAbsenceDays(beginDate, endDate);
+        service.importAbsenceDays(beginDate, endDate);
     }
 
 }
