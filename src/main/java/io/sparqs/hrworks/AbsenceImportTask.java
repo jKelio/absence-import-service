@@ -41,7 +41,7 @@ public class AbsenceImportTask {
         future = new CompletableFuture<>();
     }
 
-    public void complete() {
+    public void cancel() {
         future.cancel(true);
     }
 

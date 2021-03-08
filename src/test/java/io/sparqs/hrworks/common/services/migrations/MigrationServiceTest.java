@@ -36,7 +36,7 @@ class MigrationServiceTest {
     @Test
     void testImportAbsenceDays() {
         try {
-            task.idle();
+            task.interrupt();
             service.importAbsenceDays(BEGIN_DATE, END_DATE);
         } catch(Exception e) {
             fail(e.getMessage(), e);
