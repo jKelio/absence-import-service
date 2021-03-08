@@ -1,4 +1,4 @@
-package io.sparqs.hrworks.common.jackson;
+package io.sparqs.hrworks.common.mapping;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;

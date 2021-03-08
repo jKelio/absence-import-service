@@ -24,9 +24,9 @@ public class AbsenceImportTask {
         this.service = service;
     }
 
-    @Scheduled(initialDelay = 10000, fixedDelay = 1500)
+    @Scheduled(initialDelay = 0, cron = "0 8 * * *")
     public void importAbsences() {
-        if (Objects.nonNull(future) && !future.isDone()) future.join();
+        join();
         future = CompletableFuture.runAsync(() -> {
             int currentYear = LocalDate.now().getYear();
             LocalDate beginDate = LocalDate.parse(String.format("%s-%s-%s", currentYear, "01", "01"));
@@ -35,12 +35,25 @@ public class AbsenceImportTask {
         });
     }
 
-    public void idle() {
+    public void interrupt() {
+        logger.info("interrupt running absence import task manually");
+        join();
         future = new CompletableFuture<>();
     }
 
-    public CompletableFuture<Void> getFuture() {
-        return future;
+    public void complete() {
+        future.cancel(true);
+    }
+
+    public boolean isDone() {
+        return future.isDone();
+    }
+
+    private void join() {
+        if (Objects.nonNull(future) && !isDone()) {
+            logger.info("wait until previously started import is completed");
+            future.join();
+        }
     }
 
 }

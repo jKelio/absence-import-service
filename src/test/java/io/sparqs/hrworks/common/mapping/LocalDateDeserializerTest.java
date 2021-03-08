@@ -1,10 +1,10 @@
-package io.sparqs.hrworks.common.jackson;
+package io.sparqs.hrworks.common.mapping;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
-import static io.sparqs.hrworks.common.jackson.LocalDateWrapper.EXPECTED_SERIALIZATION;
+import static io.sparqs.hrworks.common.mapping.LocalDateWrapper.EXPECTED_SERIALIZATION;
 
 class LocalDateDeserializerTest {
 
