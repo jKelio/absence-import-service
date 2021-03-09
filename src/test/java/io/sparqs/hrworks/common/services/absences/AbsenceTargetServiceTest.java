@@ -49,7 +49,7 @@ class AbsenceTargetServiceTest {
         when(builder.rootUri(eq(properties.getBaseUrl())))
                 .thenReturn(builder);
         when(builder.build()).thenReturn(rest);
-        doNothing().when(waitingService).waitSecond();
+        doNothing().when(waitingService).waitConfiguredTime();
         service = new AbsenceTargetService(properties, builder, waitingService);
     }
 

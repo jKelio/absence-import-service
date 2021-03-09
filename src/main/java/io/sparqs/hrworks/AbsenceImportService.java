@@ -1,4 +1,4 @@
-package io.sparqs.hrworks.common.services.migrations;
+package io.sparqs.hrworks;
 
 import com.aoe.hrworks.GetAbsencesRq;
 import com.aoe.hrworks.Holiday;
@@ -30,16 +30,16 @@ import static java.time.format.DateTimeFormatter.ISO_DATE;
 import static java.util.stream.Collectors.groupingBy;
 
 @Service
-public class MigrationService {
+public class AbsenceImportService {
 
-    private final Logger logger = LoggerFactory.getLogger(MigrationService.class);
+    private final Logger logger = LoggerFactory.getLogger(AbsenceImportService.class);
     private final PersonSourceService personSourceService;
     private final PersonTargetService personTargetService;
     private final AbsenceSourceService absenceSourceService;
     private final AbsenceTargetService absenceTargetService;
 
 
-    MigrationService(
+    AbsenceImportService(
             PersonSourceService personSourceService,
             PersonTargetService personTargetService,
             AbsenceSourceService absenceSourceService,
@@ -61,7 +61,7 @@ public class MigrationService {
      * @param endDate begin date of the cleanup period
      */
     public void cleanAbsenceDays(LocalDate beginDate, LocalDate endDate) {
-        logger.info("cleaning all existing absence days from {} to {} at target started",
+        logger.info("cleaning all existing absence days from {} to {} at target",
                 beginDate.format(ISO_DATE), endDate.format(ISO_DATE));
         Collection<AbsenceDayEntity> absenceDaysToBeCleaned = this.absenceTargetService.readSchedules(beginDate, endDate).stream()
                 .filter(a -> a.getName().equals(VACATION) || a.getName().equals(SICKNESS) || a.getName().equals(HOLIDAY))
@@ -70,8 +70,6 @@ public class MigrationService {
         absenceDaysToBeCleaned.stream()
                 .map(AbsenceDayEntity::getId)
                 .forEach(absenceTargetService::deleteSchedule);
-        logger.info("cleaning all existing absence days from {} to {} at target ended",
-                beginDate.format(ISO_DATE), endDate.format(ISO_DATE));
     }
 
     /**
@@ -84,6 +82,8 @@ public class MigrationService {
      * @param endDate begin date of the cleanup period
      */
     public void importAbsenceDays(LocalDate beginDate, LocalDate endDate) {
+        logger.info("importing all absence days from {} to {} to target",
+                beginDate.format(ISO_DATE), endDate.format(ISO_DATE));
         List<String> personIds = personSourceService.getAllActivePersons().stream()
                 .map(Person::getPersonId)
                 .collect(Collectors.toList());
@@ -97,6 +97,8 @@ public class MigrationService {
                 .flatMap(id -> holidays.stream()
                         .map(d -> d.toBuilder()
                                 .userId(parseInt(findPerson(id).getId()))
+                                .userFirstName(findPerson(id).getFirstName())
+                                .userLastName(findPerson(id).getLastName())
                                 .build()))
                 .forEach(absenceTargetService::createSchedule);
 
@@ -107,8 +109,8 @@ public class MigrationService {
                 null,
                 false
         );
-        Map<String, List<AbsenceDayEntity>> absenceDaysByPersonnelNumber = absenceSourceService.getAbsencesInDays(payload);
-        Map<Integer, List<AbsenceDayEntity>> absenceDaysByUserId = absenceDaysByPersonnelNumber.entrySet().stream()
+        Map<String, List<AbsenceDayEntity>> absenceDaysByPersonId = absenceSourceService.getAbsencesInDays(payload);
+        Map<Integer, List<AbsenceDayEntity>> absenceDaysByUserId = absenceDaysByPersonId.entrySet().stream()
                 .filter(this::existPerson)
                 .flatMap(this::buildAbsenceDayByPersonId)
                 .collect(groupingBy(AbsenceDayEntity::getUserId));

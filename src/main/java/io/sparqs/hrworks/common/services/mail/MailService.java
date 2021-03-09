@@ -12,6 +12,7 @@ import com.sendgrid.helpers.mail.objects.Personalization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -56,9 +57,13 @@ public class MailService {
             String from, String subject,
             ExceptionalMailContent exceptionalMailContent,
             String... to
-    ) throws IOException {
-        sendTextualMail(from, subject, new ObjectMapper().writerWithDefaultPrettyPrinter()
-                .writeValueAsString(exceptionalMailContent), to);
+    ) {
+        try {
+            sendTextualMail(from, subject, new ObjectMapper().writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(exceptionalMailContent), to);
+        } catch (IOException e) {
+            throw new RestClientException(e.getMessage(), e);
+        }
     }
 
     /**

@@ -1,7 +1,10 @@
 package io.sparqs.hrworks.common.services.absences;
 
+import io.sparqs.hrworks.common.services.mail.MailService;
 import io.sparqs.hrworks.common.services.waiting.WaitingService;
 import io.sparqs.hrworks.config.MocoConfigurationProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -12,15 +15,19 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
+
+import static java.time.format.DateTimeFormatter.ISO_DATE;
 
 @Service
 public class AbsenceTargetService {
 
     public static final String AUTHORIZATION = "Authorization";
     public static final String API_KEY_PREFIX = "Token token=";
+    private final Logger logger = LoggerFactory.getLogger(AbsenceTargetService.class);
     private final RestTemplate restTemplate;
     private final WaitingService waitingService;
 
@@ -34,10 +41,12 @@ public class AbsenceTargetService {
     }
 
     public AbsenceDayEntity createSchedule(AbsenceDayEntity entity) throws RestClientException {
+        logger.info("create schedule of type {} for user {} {} ({})",
+                entity.getName().toString(), entity.getUserFirstName(), entity.getUserLastName(), entity.getUserId());
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<AbsenceDayEntity> httpEntity = new HttpEntity<>(entity, headers);
-        waitingService.waitSecond();
+        waitingService.waitConfiguredTime();
         return restTemplate.postForEntity(
                 "/schedules",
                 httpEntity,
@@ -46,7 +55,9 @@ public class AbsenceTargetService {
     }
 
     public Collection<AbsenceDayEntity> readSchedules(LocalDate beginDate, LocalDate endDate, String userId) throws RestClientException {
-        waitingService.waitSecond();
+        logger.info("read schedules between {} and {} for user id {}",
+                beginDate.format(ISO_DATE), endDate.format(ISO_DATE), userId);
+        waitingService.waitConfiguredTime();
         ResponseEntity<AbsenceDayEntity[]> response = restTemplate.getForEntity(
                 "/schedules?from={beginDate}&to={endDate}&user_id={userId}",
                 AbsenceDayEntity[].class,
@@ -58,7 +69,8 @@ public class AbsenceTargetService {
     }
 
     public Collection<AbsenceDayEntity> readSchedules(LocalDate beginDate, LocalDate endDate) throws RestClientException {
-        waitingService.waitSecond();
+        logger.info("read schedules between {} and {}", beginDate.format(ISO_DATE), endDate.format(ISO_DATE));
+        waitingService.waitConfiguredTime();
         ResponseEntity<AbsenceDayEntity[]> response = restTemplate.getForEntity(
                 "/schedules?from={beginDate}&to={endDate}",
                 AbsenceDayEntity[].class,
@@ -69,7 +81,8 @@ public class AbsenceTargetService {
     }
 
     public AbsenceDayEntity readSchedule(Long scheduleId) throws RestClientException {
-        waitingService.waitSecond();
+        logger.info("read schedule by schedule id {}", scheduleId);
+        waitingService.waitConfiguredTime();
         ResponseEntity<AbsenceDayEntity> response = restTemplate.getForEntity(
                 "/schedules/{scheduleId}",
                 AbsenceDayEntity.class,
@@ -79,7 +92,8 @@ public class AbsenceTargetService {
     }
 
     public void deleteSchedule(Long scheduleId) throws RestClientException {
-        waitingService.waitSecond();
+        logger.info("delete schedule by schedule id {}", scheduleId);
+        waitingService.waitConfiguredTime();
         restTemplate.delete("/schedules/{scheduleId}", scheduleId);
     }
 

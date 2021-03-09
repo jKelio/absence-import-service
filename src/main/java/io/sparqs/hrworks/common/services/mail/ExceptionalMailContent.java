@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 @Builder
 @Getter
+public
 class ExceptionalMailContent {
     private final String customMessage;
 

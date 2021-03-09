@@ -51,7 +51,7 @@ public class PersonSourceServiceTest {
     @Test
     public void testGetActivePersonByPersonnelNumber() throws IOException {
         mockGetAllActivePersonsApi();
-        assertEquals(PERSONNEL_NUMBER, service.getActivePerson(PERSONNEL_NUMBER).getPersonnelNumber());
+        assertEquals(PERSONNEL_NUMBER, service.getActivePersonByPersonnelNumber(PERSONNEL_NUMBER).getPersonnelNumber());
     }
 
     private void mockGetAllActivePersonsApi() throws IOException {

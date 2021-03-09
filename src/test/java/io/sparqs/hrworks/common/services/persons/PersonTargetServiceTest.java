@@ -45,7 +45,7 @@ class PersonTargetServiceTest {
         when(builder.rootUri(eq(properties.getBaseUrl())))
                 .thenReturn(builder);
         when(builder.build()).thenReturn(rest);
-        doNothing().when(waitingService).waitSecond();
+        doNothing().when(waitingService).waitConfiguredTime();
         personService = new PersonTargetService(properties, builder, waitingService);
     }
 

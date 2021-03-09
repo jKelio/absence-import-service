@@ -1,5 +1,6 @@
 package io.sparqs.hrworks.common.services.migrations;
 
+import io.sparqs.hrworks.AbsenceImportService;
 import io.sparqs.hrworks.AbsenceImportTask;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,13 +15,13 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 @Disabled
 @SpringBootTest
-class MigrationServiceTest {
+class AbsenceImportServiceTest {
 
     public static final LocalDate BEGIN_DATE = LocalDate.parse("2021-01-01");
     public static final LocalDate END_DATE = LocalDate.parse("2021-12-31");
 
     @Autowired
-    MigrationService service;
+    AbsenceImportService service;
 
     @Autowired
     AbsenceImportTask task;
