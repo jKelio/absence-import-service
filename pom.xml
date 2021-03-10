@@ -100,7 +100,7 @@
           <schemaVersion>V2</schemaVersion>
           <resourceGroup>AbsenceImporter</resourceGroup>
           <appName>AbsenceImporterService</appName>
-          <pricingTier>P1v2</pricingTier>
+          <pricingTier>B1</pricingTier>
           <region>westeurope</region>
           <runtime>
             <os>windows</os>
