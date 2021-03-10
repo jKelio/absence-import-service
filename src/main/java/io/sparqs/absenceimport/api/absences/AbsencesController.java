@@ -2,11 +2,16 @@ package io.sparqs.absenceimport.api.absences;
 
 import io.sparqs.absenceimport.AbsenceImportService;
 import io.sparqs.absenceimport.AbsenceImportTask;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.server.ResponseStatusException;
+
+import static org.springframework.http.HttpStatus.LOCKED;
 
 @RestController
 public class AbsencesController {
@@ -21,10 +26,10 @@ public class AbsencesController {
 
     @PostMapping("api/absences")
     public void cleanAndImportAbsences() {
-        if (!task.isDone()) {
-            throw new LockedException("blocked due to ongoing clean-up and import process");
+        if (task.isDone()) {
+            task.cleanAndImportAbsences();
         }
-        task.cleanAndImportAbsences();
+        throw new ResponseStatusException(LOCKED, "blocked due to ongoing clean-up and import process");
     }
 
     @GetMapping("api/absences/lastimport")

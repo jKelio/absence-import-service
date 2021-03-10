@@ -34,7 +34,7 @@ public class AbsenceImportTask {
         this.mailService = mailService;
     }
 
-    @Scheduled(cron = "0 0 8-16 * * *")
+    @Scheduled(cron = "0 0 7,17 * * *")
     public void cleanAndImportAbsences() {
         join();
         future = CompletableFuture.runAsync(this::cleanAndImportAbsenceDaysInternal);
@@ -47,12 +47,17 @@ public class AbsenceImportTask {
     }
 
 
-    public boolean isDone() {
-        return Objects.nonNull(future) && isDone();
+    public boolean isNotDone() {
+        return Objects.nonNull(future) && future.isDone();
     }
 
+    public boolean isDone() {
+        return !Objects.nonNull(future) || future.isDone();
+    }
+
+
     public void join() {
-        if (!isDone()) {
+        if (isNotDone()) {
             logger.info("wait until previously started import is completed");
             future.join();
         }
