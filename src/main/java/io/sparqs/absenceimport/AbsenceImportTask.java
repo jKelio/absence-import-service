@@ -2,6 +2,7 @@ package io.sparqs.absenceimport;
 
 import io.sparqs.absenceimport.common.services.mail.ExceptionalMailContent;
 import io.sparqs.absenceimport.common.services.mail.MailService;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -9,11 +10,11 @@ import org.springframework.scheduling.config.ScheduledTaskHolder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 @Component
+@Getter
 public class AbsenceImportTask {
 
     public static final String SENDER = "leon.jaekel@sparqs.io";
@@ -25,8 +26,6 @@ public class AbsenceImportTask {
     private final MailService mailService;
 
     private CompletableFuture<Void> future;
-    private LocalDateTime lastCleanedDateTime;
-    private LocalDateTime lastImportedDateTime;
     private ExceptionalMailContent lastExceptionalContent;
 
     AbsenceImportTask(ScheduledTaskHolder holder, io.sparqs.absenceimport.AbsenceImportService absenceImportService, MailService mailService) {
@@ -47,24 +46,13 @@ public class AbsenceImportTask {
         future = new CompletableFuture<>();
     }
 
-    public void complete() {
-        future.complete(null);
-    }
-
-    public void completeExceptionally(Throwable throwable) {
-        future.completeExceptionally(throwable);
-    }
-
-    public void cancel() {
-        future.cancel(true);
-    }
 
     public boolean isDone() {
-        return future.isDone();
+        return Objects.nonNull(future) && isDone();
     }
 
     public void join() {
-        if (Objects.nonNull(future) && !isDone()) {
+        if (!isDone()) {
             logger.info("wait until previously started import is completed");
             future.join();
         }
@@ -75,9 +63,7 @@ public class AbsenceImportTask {
         final LocalDate beginDate = LocalDate.parse(String.format("%s-%s-%s", currentYear, "01", "01"));
         final LocalDate endDate = LocalDate.parse(String.format("%s-%s-%s", currentYear, "12", "31"));
         try {
-            lastCleanedDateTime = LocalDateTime.now();
             absenceImportService.cleanAbsenceDays(beginDate, endDate);
-            lastImportedDateTime = LocalDateTime.now();
             absenceImportService.importAbsenceDays(beginDate, endDate);
             mailService.sendTextualMail(
                     SENDER,

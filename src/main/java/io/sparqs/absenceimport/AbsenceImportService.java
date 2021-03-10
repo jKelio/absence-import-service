@@ -10,18 +10,21 @@ import io.sparqs.absenceimport.common.services.absences.AbsenceTypeEnum;
 import io.sparqs.absenceimport.common.services.persons.PersonEntity;
 import io.sparqs.absenceimport.common.services.persons.PersonSourceService;
 import io.sparqs.absenceimport.common.services.persons.PersonTargetService;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static io.sparqs.absenceimport.AbsenceImportStatus.*;
 import static io.sparqs.absenceimport.common.services.absences.AbsenceTypeEnum.*;
 import static java.lang.Integer.parseInt;
 import static java.time.DayOfWeek.SATURDAY;
@@ -38,6 +41,14 @@ public class AbsenceImportService {
     private final AbsenceSourceService absenceSourceService;
     private final AbsenceTargetService absenceTargetService;
 
+    @Getter
+    private AbsenceImportStatus status = COMPLETED;
+
+    @Getter
+    private LocalDateTime lastCleanedDateTime;
+
+    @Getter
+    private LocalDateTime lastImportedDateTime;
 
     AbsenceImportService(
             PersonSourceService personSourceService,
@@ -63,6 +74,8 @@ public class AbsenceImportService {
     public void cleanAbsenceDays(LocalDate beginDate, LocalDate endDate) {
         logger.info("cleaning all existing absence days from {} to {} at target",
                 beginDate.format(ISO_DATE), endDate.format(ISO_DATE));
+        status = CLEANING;
+        lastCleanedDateTime = LocalDateTime.now();
         Collection<AbsenceDayEntity> absenceDaysToBeCleaned = this.absenceTargetService.readSchedules(beginDate, endDate).stream()
                 .filter(a -> a.getName().equals(VACATION) || a.getName().equals(SICKNESS) || a.getName().equals(HOLIDAY))
                 .collect(Collectors.toList());
@@ -84,6 +97,8 @@ public class AbsenceImportService {
     public void importAbsenceDays(LocalDate beginDate, LocalDate endDate) {
         logger.info("importing all absence days from {} to {} to target",
                 beginDate.format(ISO_DATE), endDate.format(ISO_DATE));
+        lastImportedDateTime = LocalDateTime.now();
+        status = IMPORTING_HOLIDAYS;
         List<String> personIds = personSourceService.getAllActivePersons().stream()
                 .map(Person::getPersonId)
                 .collect(Collectors.toList());
@@ -102,6 +117,7 @@ public class AbsenceImportService {
                                 .build()))
                 .forEach(absenceTargetService::createSchedule);
 
+        status = IMPORTING_ABSENCES;
         GetAbsencesRq payload = new GetAbsencesRq(
                 Date.from(beginDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()),
                 Date.from(endDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()),
@@ -120,6 +136,7 @@ public class AbsenceImportService {
                 .filter(this::isSparta) // is not holiday
                 .map(this::buildAbsenceDay)
                 .forEach(absenceTargetService::createSchedule);
+        status = COMPLETED;
     }
 
     private AbsenceDayEntity createAbsenceHoliday(Holiday h) {
