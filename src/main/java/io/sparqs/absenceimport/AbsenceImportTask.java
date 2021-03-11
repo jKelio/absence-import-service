@@ -46,18 +46,12 @@ public class AbsenceImportTask {
         future = new CompletableFuture<>();
     }
 
-
-    public boolean isNotDone() {
-        return Objects.nonNull(future) && future.isDone();
+    public boolean isBusy() {
+        return Objects.nonNull(future) && !future.isDone();
     }
-
-    public boolean isDone() {
-        return !Objects.nonNull(future) || future.isDone();
-    }
-
 
     public void join() {
-        if (isNotDone()) {
+        if (isBusy()) {
             logger.info("wait until previously started import is completed");
             future.join();
         }
