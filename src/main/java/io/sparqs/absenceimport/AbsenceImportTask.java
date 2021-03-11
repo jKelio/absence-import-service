@@ -18,7 +18,7 @@ import java.util.concurrent.CompletableFuture;
 public class AbsenceImportTask {
 
     public static final String SENDER = "leon.jaekel@sparqs.io";
-    public static final String[] RECEIVERS = { "leon.jaekel@sparqs.io", "info@leon-jaekel.com" };
+    public static final String[] RECEIVERS = { "leon.jaekel@sparqs.io", "semih.sevinc@sparqs.io" };
     public static final String EXCEPTIONAL_MAIL_SUBJECT = "Import von Abwesenheiten fehlerhaft!";
     private final Logger logger = LoggerFactory.getLogger(AbsenceImportTask.class);
     private final ScheduledTaskHolder holder; // TODO: analysis and research how to interrupt already running and executed tasks with spring
