@@ -59,16 +59,11 @@ public class AbsenceImportTask {
 
     private void cleanAndImportAbsenceDaysInternal() {
         final int currentYear = LocalDate.now().getYear();
-        final LocalDate beginDate = LocalDate.parse(String.format("%s-%s-%s", currentYear, "01", "01"));
-        final LocalDate endDate = LocalDate.parse(String.format("%s-%s-%s", currentYear, "12", "31"));
+        final LocalDate beginDate = LocalDate.of(currentYear, 1, 1);
+        final LocalDate endDate = LocalDate.of(currentYear, 12, 31);
         try {
             absenceImportService.cleanAbsenceDays(beginDate, endDate);
             absenceImportService.importAbsenceDays(beginDate, endDate);
-            mailService.sendTextualMail(
-                    SENDER,
-                   "Erfolgreicher Import aller Abwesenheiten",
-                    "FYI",
-                    RECEIVERS);
         } catch(Exception e) {
             lastExceptionalContent = ExceptionalMailContent.builder()
                     .customMessage(EXCEPTIONAL_MAIL_SUBJECT)
