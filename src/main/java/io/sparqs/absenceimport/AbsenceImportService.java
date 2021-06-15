@@ -15,10 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -83,6 +80,41 @@ public class AbsenceImportService {
         absenceDaysToBeCleaned.stream()
                 .map(AbsenceDayEntity::getId)
                 .forEach(absenceTargetService::deleteSchedule);
+    }
+
+    public List<AbsenceDayEntity> findAbsenceDaysToBeCleaned(LocalDate beginDate, LocalDate endDate) {
+
+        // 1) get absence days and holidays in source:
+        List<String> sourcePersonIds = personSourceService.getAllActivePersons().stream()
+                .map(Person::getPersonId)
+                .collect(Collectors.toList());
+        Collection<PersonEntity> targetPersons = personTargetService.getUsers();
+        GetAbsencesRq payload = new GetAbsencesRq(
+                Date.from(beginDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()),
+                Date.from(endDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()),
+                sourcePersonIds,
+                null,
+                false
+        );
+        Collection<AbsenceDayEntity> absenceDaysInSource = absenceSourceService.getAbsencesInDays(payload).entrySet().stream()
+                .flatMap(e -> e.getValue().stream().map(d -> d.toBuilder()
+                        .userId(parseInt(targetPersons.stream()
+                                .filter(p -> p.getEmail().equals(e.getKey())).findAny().orElseThrow().getId())).build()))
+                .collect(Collectors.toList());
+        Collection<AbsenceDayEntity> holidays = absenceSourceService.getHolidays(beginDate.getYear()).stream()
+                .map(this::createAbsenceHoliday)
+                .collect(Collectors.toList());
+
+        // 2) get all absence days in target:
+        Collection<AbsenceDayEntity> absenceDaysInTarget = absenceTargetService.readSchedules(beginDate, endDate);
+
+        // 3) get all absence days from target which aren't existing in source as absences and holidays to be removed
+        return absenceDaysInTarget.stream()
+                .filter(targetDay -> absenceDaysInSource.stream()
+                        .noneMatch(sourceDay -> targetDay.getDate().equals(sourceDay.getDate())))
+                .filter(targetDay -> targetDay.getDate().equals(holidays.stream()
+                        .noneMatch(sourceDay -> targetDay.getDate().equals(sourceDay.getDate()))))
+                .collect(Collectors.toList());
     }
 
     /**

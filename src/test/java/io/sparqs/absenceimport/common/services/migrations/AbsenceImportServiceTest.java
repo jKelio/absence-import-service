@@ -1,7 +1,11 @@
 package io.sparqs.absenceimport.common.services.migrations;
 
+import com.aoe.hrworks.AbsenceTypeList;
+import com.aoe.hrworks.HrWorksClient;
 import io.sparqs.absenceimport.AbsenceImportService;
 import io.sparqs.absenceimport.AbsenceImportTask;
+import io.sparqs.absenceimport.common.services.absences.AbsenceDayEntity;
+import io.sparqs.absenceimport.common.services.absences.AbsenceSourceService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -10,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDate;
+import java.util.Collection;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -43,5 +48,14 @@ class AbsenceImportServiceTest {
         } catch(Exception e) {
             fail(e.getMessage(), e);
         }
+    }
+
+    @Autowired
+    HrWorksClient client;
+
+    @Test
+    void test() {
+        AbsenceTypeList types =  client.getAllAbsenceTypes().blockingGet();
+        Collection<AbsenceDayEntity> daysToBeCleaned = service.findAbsenceDaysToBeCleaned(BEGIN_DATE, END_DATE);
     }
 }
