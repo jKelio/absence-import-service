@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static io.sparqs.absenceimport.common.services.absences.AbsenceTypeEnum.SICKNESS;
+import static io.sparqs.absenceimport.common.services.absences.AbsenceTypeEnum.SICKNESS_WITH_CERTIFICATE;
 import static java.time.format.DateTimeFormatter.ISO_DATE;
 import static java.util.stream.Collectors.groupingBy;
 
@@ -70,7 +70,7 @@ public class AbsenceSourceService {
     private boolean isConfirmedAbsence(Absence a) {
         try {
             AbsenceTypeEnum type = AbsenceTypeEnum.fromSource(a.getName());
-            return type.equals(SICKNESS) || type.getStatus().equals(a.getStatus());
+            return type.equals(SICKNESS_WITH_CERTIFICATE) || type.getStatus().equals(a.getStatus());
         } catch(Exception exception) {
             return false;
         }

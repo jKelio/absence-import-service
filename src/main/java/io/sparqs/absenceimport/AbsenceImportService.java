@@ -65,7 +65,7 @@ public class AbsenceImportService {
     /**
      * clean absence days between begin date and end date if absence day is of type
      * - {@link AbsenceTypeEnum#VACATION}
-     * - {@link AbsenceTypeEnum#SICKNESS}
+     * - {@link AbsenceTypeEnum#SICKNESS_WITH_CERTIFICATE}
      * - {@link AbsenceTypeEnum#HOLIDAY}
      *
      * @param beginDate begin date of the cleanup period
@@ -77,7 +77,7 @@ public class AbsenceImportService {
         status = CLEANING;
         lastCleanedDateTime = LocalDateTime.now();
         Collection<AbsenceDayEntity> absenceDaysToBeCleaned = this.absenceTargetService.readSchedules(beginDate, endDate).stream()
-                .filter(a -> a.getName().equals(VACATION) || a.getName().equals(SICKNESS) || a.getName().equals(HOLIDAY))
+                .filter(a -> a.getName().equals(VACATION) || a.getName().equals(SICKNESS_WITH_CERTIFICATE) || a.getName().equals(HOLIDAY))
                 .collect(Collectors.toList());
         logger.info("{} absence days to be cleaned at target", absenceDaysToBeCleaned.size());
         absenceDaysToBeCleaned.stream()
@@ -88,7 +88,7 @@ public class AbsenceImportService {
     /**
      * import absence days between begin date and end date of type for every active person
      * - {@link AbsenceTypeEnum#VACATION}
-     * - {@link AbsenceTypeEnum#SICKNESS}
+     * - {@link AbsenceTypeEnum#SICKNESS_WITH_CERTIFICATE}
      * - {@link AbsenceTypeEnum#HOLIDAY}
      *
      * @param beginDate begin date of the cleanup period
@@ -180,7 +180,7 @@ public class AbsenceImportService {
 
     private AbsenceDayEntity buildAbsenceDay(AbsenceDayEntity entity) {
         return entity.toBuilder()
-                .comment("automatically imported from HRworks")
+                .comment(entity.getName().getSource() + " - automatically imported from HRworks")
                 .am(isHalfHoliday(entity) != entity.isAm())
                 .pm(isHalfHoliday(entity) != entity.isPm())
                 .overwrite(true)
